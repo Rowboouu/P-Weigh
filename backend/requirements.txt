@@ -1,0 +1,6 @@
+opencv-python
+numpy
+inference-sdk
+segment-anything
+torch
+torchvision

@@ -2,13 +2,14 @@ import React from "react";
 
 const Description = () => {
   return (
-    <div className="p-4 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-      <h2 className="text-lg font-semibold mb-2">About the System</h2>
-      <p>
-        This system uses a Kinect V1 camera to capture RGB and depth videos of
-        pigs. A machine learning model analyzes the footage to estimate the
-        weight of each pig, displaying bounding boxes and weights in real-time.
-        Ensure the Kinect V1 is connected for the system to function.
+    <div className="bg-white dark:bg-gray-800 text-[#31333F] dark:text-gray-200">
+      <h2 className="text-[40px] font-semibold mb-4">
+        🐷Pig Weight Estimation System
+      </h2>
+      <p className="text-[#403E3E] dark:text-gray-200">
+        Easily estimate the weight of pigs using advanced 3D imaging and AI.
+        This tool analyzes depth and RGB images captured by the Kinect sensor to
+        provide accurate weight predictions—no manual weighing required.
       </p>
     </div>
   );

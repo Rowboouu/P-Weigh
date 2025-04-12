@@ -3,6 +3,7 @@ import Header from "./components/Header";
 import VideoDisplay from "./components/VideoDisplay";
 import DataPanel from "./components/DataPanel";
 import Description from "./components/Description";
+import Reminder from "./components/Reminder";
 import { ThemeProvider } from "./context/ThemeContext";
 
 const App = () => {
@@ -23,14 +24,19 @@ const App = () => {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-white dark:bg-gray-800">
         <Header />
-        <main className="container mx-auto p-4">
-          <div className="flex flex-col md:flex-row gap-4 mb-8">
-            <VideoDisplay predictions={predictions} />
-            <DataPanel predictions={predictions} />
-          </div>
+        <main className="container mx-auto py-12 lg:px-28 px-4 flex flex-col gap-6 items-center">
           <Description />
+          <Reminder />
+          <div className="flex flex-col md:grid md:grid-cols-4 gap-4 mb-8 w-full">
+            <div className="col-span-3">
+              <VideoDisplay predictions={predictions} />
+            </div>
+            <div className="col-span-1">
+              <DataPanel predictions={predictions} />
+            </div>
+          </div>
         </main>
       </div>
     </ThemeProvider>

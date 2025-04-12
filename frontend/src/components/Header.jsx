@@ -7,11 +7,11 @@ const Header = () => {
 
   return (
     <header
-      className={`p-4 flex justify-between items-center ${
-        theme === "dark" ? "bg-gray-800 text-white" : "bg-blue-600 text-white"
+      className={`py-4 px-8 flex justify-between items-center border-b ${
+        theme === "dark" ? "text-white" : "bg-white text-[#0B0B0B]"
       }`}
     >
-      <h1 className="text-2xl font-bold">Pig Weight Estimator</h1>
+      <h1 className="text-2xl font-bold">P-Weigh</h1>
       <ThemeToggle />
     </header>
   );

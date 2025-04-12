@@ -19,16 +19,37 @@ function startKinect() {
   const sketchPath = path.resolve(__dirname, 'kinect').replace(/\\/g, '/');
   const command = `processing-java --sketch="${sketchPath}" --run`;
   console.log(`Running command: ${command}`);
-  kinectProcess = exec(command, (err, stdout, stderr) => {
-    if (err || stderr.includes("No Kinect V1 Detected")) {
-      console.error('Kinect Error:', stderr || err.message);
+  kinectProcess = exec(command, (err) => {
+    if (err) {
+      console.error('Kinect Process Error:', err.message);
       kinectRunning = false;
       kinectProcess = null;
       setTimeout(checkKinect, 5000);
-    } else {
-      console.log('Kinect Started:', stdout);
+      return;
+    }
+  });
+
+  kinectProcess.stdout.on('data', (data) => {
+    console.log('Kinect Output:', data);
+    if (data.includes('Kinect V1 Detected')) {
       kinectRunning = true;
     }
+  });
+
+  kinectProcess.stderr.on('data', (data) => {
+    console.error('Kinect Stderr:', data);
+    if (data.includes('No Kinect V1 Detected')) {
+      kinectRunning = false;
+      kinectProcess = null;
+      setTimeout(checkKinect, 5000);
+    }
+  });
+
+  kinectProcess.on('exit', (code) => {
+    console.log(`Kinect process exited with code ${code}`);
+    kinectRunning = false;
+    kinectProcess = null;
+    setTimeout(checkKinect, 5000);
   });
 }
 
@@ -54,7 +75,6 @@ wss.on('connection', (ws) => {
       return;
     }
 
-    // Step 1: Pig Detection
     PythonShell.run('ml/pig-detect_crop.py', {
       args: ['rgb.png', 'depth.png']
     }, (err) => {
@@ -64,7 +84,6 @@ wss.on('connection', (ws) => {
         return;
       }
 
-      // Step 2: Background Removal
       PythonShell.run('ml/background-remove.py', {
         args: ['output']
       }, (err, bgResults) => {
@@ -74,7 +93,6 @@ wss.on('connection', (ws) => {
           return;
         }
 
-        // Step 3: Weight Estimation
         PythonShell.run('ml/weight-estimate.py', {
           args: ['processed_output']
         }, (err, weightResults) => {

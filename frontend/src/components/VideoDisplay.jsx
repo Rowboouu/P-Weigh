@@ -33,7 +33,7 @@ const VideoDisplay = ({ predictions }) => {
       </div>
       {error ? (
         <div className="text-center text-red-500 text-xl p-4">{error}</div>
-      ) : (
+      ) : rgbSrc ? (
         <div className="relative">
           <img
             src={rgbSrc}
@@ -57,6 +57,10 @@ const VideoDisplay = ({ predictions }) => {
               </span>
             </div>
           ))}
+        </div>
+      ) : (
+        <div className="text-center text-gray-500 text-xl p-4">
+          Waiting for video feed...
         </div>
       )}
     </div>

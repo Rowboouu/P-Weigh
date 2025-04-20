@@ -1,66 +1,45 @@
 import cv2
-import numpy as np
-import torch
+import requests
 import os
 
-# Placeholder for your weight estimation model
-# Replace with your actual model loading and inference code
-def load_weight_model(model_path="your_weight_model.pt"):
-    # Example: Loading a PyTorch model
-    # Replace with your model's loading logic
-    try:
-        model = torch.load(model_path)  # Adjust based on your model format
-        model.eval()
-        return model
-    except Exception as e:
-        print(f"Error loading weight model: {e}")
-        return None
-
-def estimate_weights(crops, model=None):
+def estimate_weights(crops, api_url="http://localhost:8000/predict/"):
     """
-    Estimate pig weights using processed RGB and depth images.
-    Returns crops with added weight predictions.
+    Estimate pig weights by sending processed depth images to FastAPI endpoint.
     """
-    if model is None:
-        print("No weight model provided, using dummy weights")
-    
     weighted_crops = []
     
     for crop in crops:
-        rgb_path = crop["rgb_path"]
         depth_path = crop["depth_path"]
         bbox = crop["bbox"]
         
-        rgb_image = cv2.imread(rgb_path, cv2.IMREAD_UNCHANGED)  # RGBA
-        depth_image = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)  # RGBA or grayscale
-        
-        # Your Weight Estimation Logic Here
-        # Input: rgb_image (RGBA), depth_image (RGBA or grayscale)
-        # Output: weight (float)
-        weight = None
-        if model:
-            try:
-                # Placeholder: Replace with your model's inference
-                # Example for a PyTorch model:
-                """
-                import torchvision.transforms as T
-                transform = T.Compose([T.ToTensor(), T.Resize((224, 224))])
-                rgb_tensor = transform(rgb_image).unsqueeze(0)
-                depth_tensor = transform(depth_image).unsqueeze(0)
-                input_tensor = torch.cat((rgb_tensor, depth_tensor), dim=1)  # Adjust channels
-                with torch.no_grad():
-                    weight = model(input_tensor).item()  # Adjust based on output
-                """
-                pass
-            except Exception as e:
-                print(f"Weight estimation error: {e}")
-                weight = 0.0
+        # Read depth image
+        depth_image = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)
+        if depth_image is None:
+            print(f"Error: Failed to load depth image at {depth_path}")
+            weight = 0.0
         else:
-            # Dummy weight (used if no model is provided)
-            weight = 45.2 if len(weighted_crops) == 0 else 50.1
+            try:
+                # Prepare image for FastAPI (grayscale)
+                if len(depth_image.shape) > 2:
+                    depth_image = cv2.cvtColor(depth_image, cv2.COLOR_RGBA2GRAY)
+                _, img_encoded = cv2.imencode('.png', depth_image)
+                files = {'file': ('depth.png', img_encoded.tobytes(), 'image/png')}
+                
+                # Send POST request to FastAPI
+                response = requests.post(api_url, files=files)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    weight = result.get("predicted_weight", 0.0)
+                else:
+                    print(f"FastAPI error: {response.status_code} - {response.text}")
+                    weight = 0.0
+            except Exception as e:
+                print(f"Weight estimation error for {depth_path}: {e}")
+                weight = 0.0
         
         weighted_crops.append({
-            "rgb_path": rgb_path,
+            "rgb_path": crop.get("rgb_path"),
             "depth_path": depth_path,
             "bbox": bbox,
             "weight": weight
@@ -76,6 +55,5 @@ if __name__ == "__main__":
             "bbox": {"x1": 0, "y1": 0, "x2": 100, "y2": 100}
         }
     ]
-    model = load_weight_model()  # Replace with your model path
-    weighted_crops = estimate_weights(crops, model)
+    weighted_crops = estimate_weights(crops)
     print(weighted_crops)
